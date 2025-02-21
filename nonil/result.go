@@ -54,3 +54,19 @@ func (iv invalid[T, E]) IsValid() bool                             { return fals
 func (iv invalid[T, E]) Valid() T                                  { panic(ErrErrorNotValid) }
 func (iv invalid[T, E]) IsError() bool                             { return true }
 func (iv invalid[T, E]) Error() E                                  { return iv.wrap }
+
+func ToResult[T any, E error](t T, e E) (r Result[T, E]) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			// assuming that the panic would be from e.Error() 
+			// because e was nil
+			// therefore, a nil error means this 
+			// should return a valid result
+			r = Valid[T, E](t)
+		}
+	}()
+	if e.Error() != "" {
+		return InValid[T, E](e)
+	}
+	return Valid[T, E](t)
+}
